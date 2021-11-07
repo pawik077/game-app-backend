@@ -43,6 +43,30 @@ api.post('/tokensignin/', async (req, res) => {
 	}
 })
 
+api.post('/addGameResult/', async (req, res) => {
+	const eMail = req.body.eMail
+	const gameID = req.body.gameID
+	const gameSettings = req.body.gameSettings
+	const gameResults = req.body.gameResults
+	let conn
+	try {
+		conn = await db.getConnection()
+		conn.query('USE 20367_pwr1')
+		const gameSettingsID = (await conn.query('INSERT INTO GameSettings SET Setting1 = ?, Setting2 = ?, Setting3 = ?, Setting4 = ?, Setting5 = ?',
+			[gameSettings.Setting1, gameSettings.Setting2, gameSettings.Setting3, gameSettings.Setting4, gameSettings.Setting5])).insertId
+		const gameResultsID = (await conn.query('INSERT INTO GameResults SET Result1 = ?, Result2 = ?, Result3 = ?, Result4 = ?, Result5 = ?',
+			[gameResults.Result1, gameResults.Result2, gameResults.Result3, gameResults.Result4, gameResults.Result5])).insertId
+		conn.query(`INSERT INTO GameRounds(PlayerID, GameID, GameSettingsID, GameResultsID, Date) VALUES ((SELECT ID FROM Players WHERE EMail = '${eMail}'), ${gameID}, ${gameSettingsID}, ${gameResultsID}, '${new Date().toISOString().slice(0, 19).replace('T', ' ')}')`)
+		res.end()
+	} catch (error) {
+		console.log(error)
+		res.status(500)
+		res.end()
+	} finally {
+		if(conn) conn.end()
+	}
+})
+
 const getUserBySub = async (sub) => {
 	let conn
 	try {

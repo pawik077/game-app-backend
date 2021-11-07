@@ -51,9 +51,9 @@ api.post('/results/', async (req, res) => {
 		conn = await db.getConnection()
 		conn.query(`USE ${process.env.DB_NAME}`)
 		const gameSettingsID = (await conn.query('INSERT INTO GameSettings SET Setting1 = ?, Setting2 = ?, Setting3 = ?, Setting4 = ?, Setting5 = ?',
-			[gameSettings.Setting1, gameSettings.Setting2, gameSettings.Setting3, gameSettings.Setting4, gameSettings.Setting5])).insertId
+			[!gameSettings.Setting1 ? null : gameSettings.Setting1, !gameSettings.Setting2 ? null : gameSettings.Setting2, !gameSettings.Setting3 ? null : gameSettings.Setting3, !gameSettings.Setting4 ? null : gameSettings.Setting4, !gameSettings.Setting5 ? null : gameSettings.Setting5])).insertId
 		const gameResultsID = (await conn.query('INSERT INTO GameResults SET Result1 = ?, Result2 = ?, Result3 = ?, Result4 = ?, Result5 = ?',
-			[gameResults.Result1, gameResults.Result2, gameResults.Result3, gameResults.Result4, gameResults.Result5])).insertId
+			[!gameResults.Result1 ? null : gameResults.Result1, !gameResults.Result2 ? null : gameResults.Result2, !gameResults.Result3 ? null : gameResults.Result3, !gameResults.Result4 ? null : gameResults.Result4, !gameResults.Result5 ? null : gameResults.Result5])).insertId
 		await conn.query('INSERT INTO GameRounds SET PlayerID = (SELECT ID FROM Players WHERE EMail = ?), GameID = ?, GameSettingsID = ?, GameResultsID = ?, Date = ?',
 			[eMail, gameID, gameSettingsID, gameResultsID, new Date().toISOString().slice(0, 19).replace('T', ' ')])
 	} catch (error) {

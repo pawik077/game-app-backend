@@ -56,14 +56,14 @@ api.post('/addGameResult/', async (req, res) => {
 			[gameSettings.Setting1, gameSettings.Setting2, gameSettings.Setting3, gameSettings.Setting4, gameSettings.Setting5])).insertId
 		const gameResultsID = (await conn.query('INSERT INTO GameResults SET Result1 = ?, Result2 = ?, Result3 = ?, Result4 = ?, Result5 = ?',
 			[gameResults.Result1, gameResults.Result2, gameResults.Result3, gameResults.Result4, gameResults.Result5])).insertId
-		conn.query(`INSERT INTO GameRounds(PlayerID, GameID, GameSettingsID, GameResultsID, Date) VALUES ((SELECT ID FROM Players WHERE EMail = '${eMail}'), ${gameID}, ${gameSettingsID}, ${gameResultsID}, '${new Date().toISOString().slice(0, 19).replace('T', ' ')}')`)
-		res.end()
+		await conn.query('INSERT INTO GameRounds SET PlayerID = (SELECT ID FROM Players WHERE EMail = ?), GameID = ?, GameSettingsID = ?, GameResultsID = ?, Date = ?',
+			[eMail, gameID, gameSettingsID, gameResultsID, new Date().toISOString().slice(0, 19).replace('T', ' ')])
 	} catch (error) {
 		console.log(error)
 		res.status(500)
-		res.end()
 	} finally {
-		if(conn) conn.end()
+		if (conn) conn.end()
+		res.end()
 	}
 })
 

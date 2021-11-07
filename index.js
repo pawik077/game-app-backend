@@ -6,8 +6,6 @@ const axios = require('axios')
 require('dotenv').config()
 const api = express()
 const port = 4000
-const CLIENT_ID = '479916084496-dp7jkcmdb7k4evs23grf0sotrb0nfo5p.apps.googleusercontent.com'
-const DOMAIN = 'student.pwr.edu.pl'
 
 const db = mariadb.createPool({
 	host: process.env.DB_HOST,
@@ -28,8 +26,8 @@ api.post('/tokensignin/', async (req, res) => {
 			domain_user:  false,
 			new_user: false
 		}
-		if (verification.data.aud !== CLIENT_ID) response.client_correct = false
-		if(verification.data.hd === DOMAIN) response.domain_user = true
+		if (verification.data.aud !== process.env.CLIENT_ID) response.client_correct = false
+		if(verification.data.hd === process.env.DOMAIN) response.domain_user = true
 		if ((await getUserBySub(verification.data.sub)).length === 0) {
 			const userName = verification.data.name
 			const eMail = verification.data.email

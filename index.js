@@ -65,6 +65,33 @@ api.post('/addGameResult/', async (req, res) => {
 	}
 })
 
+api.get('/results/', async (req, res) => {
+	const eMail = req.query['eMail']
+	const gameID = req.query['gameID']
+	let conn
+	let r
+	try {
+		conn = await db.getConnection()
+		conn.query(`USE ${process.env.DB_NAME}`)
+		let baseQuery = 'SELECT GameRounds.ID, GameID, PlayerID, UserName, EMail, Setting1, Setting2, Setting3, Setting4, Setting5, Result1, Result2, Result3, Result4, Result5, Date FROM `GameRounds` INNER JOIN Players ON PlayerID = Players.ID INNER JOIN GameSettings ON GameSettingsID = GameSettings.ID INNER JOIN GameResults ON GameResultsID = GameResults.ID'
+		if (eMail && gameID) {
+			r = await conn.query(baseQuery + ' WHERE EMail = ? AND GameID = ?', [eMail, gameID])
+		} else if (eMail) {
+			r = await conn.query(baseQuery + ' WHERE EMail = ?', eMail)
+		} else if (gameID) {
+			r = await conn.query(baseQuery + ' WHERE GameID = ?', gameID)
+		} else {
+			r = await conn.query(baseQuery)
+		}
+	} catch (error) {
+		console.log(error)
+		res.status(500)
+	} finally {
+		if (conn) conn.end()
+		res.send(r)
+	}
+})
+
 const getUserBySub = async (sub) => {
 	let conn
 	try {

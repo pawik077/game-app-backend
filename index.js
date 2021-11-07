@@ -41,7 +41,7 @@ api.post('/tokensignin/', async (req, res) => {
 	}
 })
 
-api.post('/addGameResult/', async (req, res) => {
+api.post('/results/', async (req, res) => {
 	const eMail = req.body.eMail
 	const gameID = req.body.gameID
 	const gameSettings = req.body.gameSettings

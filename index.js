@@ -51,7 +51,7 @@ api.post('/addGameResult/', async (req, res) => {
 	let conn
 	try {
 		conn = await db.getConnection()
-		conn.query('USE 20367_pwr1')
+		conn.query(`USE ${process.env.DB_NAME}`)
 		const gameSettingsID = (await conn.query('INSERT INTO GameSettings SET Setting1 = ?, Setting2 = ?, Setting3 = ?, Setting4 = ?, Setting5 = ?',
 			[gameSettings.Setting1, gameSettings.Setting2, gameSettings.Setting3, gameSettings.Setting4, gameSettings.Setting5])).insertId
 		const gameResultsID = (await conn.query('INSERT INTO GameResults SET Result1 = ?, Result2 = ?, Result3 = ?, Result4 = ?, Result5 = ?',
@@ -71,8 +71,8 @@ const getUserBySub = async (sub) => {
 	let conn
 	try {
 		conn = await db.getConnection()
-		conn.query('USE 20367_pwr1')
-		const r = await conn.query(`SELECT * FROM Players WHERE Sub = ${sub}`)
+		conn.query(`USE ${process.env.DB_NAME}`)
+		const r = await conn.query('SELECT * FROM Players WHERE Sub = ?', sub)
 		data = r.splice(r.indexOf('meta'), 1)
 		return data
 	} catch (error) {
@@ -86,8 +86,8 @@ const addUser = async (userName, eMail, sub) => {
 	let conn
 	try {
 		conn = await db.getConnection()
-		conn.query('USE 20367_pwr1')
-		const r = await conn.query(`INSERT INTO Players(UserName, EMail, Sub) VALUES ('${userName}', '${eMail}', '${sub}')`)
+		conn.query(`USE ${process.env.DB_NAME}`)
+		const r = await conn.query('INSERT INTO Players SET UserName = ?, EMail = ?, Sub = ?', [userName, eMail, sub])
 	} catch (error) {
 		throw(error)
 	} finally {

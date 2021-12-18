@@ -46,6 +46,7 @@ api.post('/results/', async (req, res) => {
 	const gameID = req.body.gameID
 	const gameSettings = req.body.gameSettings
 	const gameResults = req.body.gameResults
+	const deviceInfo = req.body.deviceInfo
 	let conn
 	try {
 		conn = await db.getConnection()
@@ -54,8 +55,8 @@ api.post('/results/', async (req, res) => {
 			[gameSettings.Setting1 === undefined || gameSettings.Setting1 === null ? null : gameSettings.Setting1, gameSettings.Setting2 === undefined || gameSettings.Setting2 === null ? null : gameSettings.Setting2, gameSettings.Setting3 === undefined || gameSettings.Setting3 === null ? null : gameSettings.Setting3, gameSettings.Setting4 === undefined || gameSettings.Setting4 === null ? null : gameSettings.Setting4, gameSettings.Setting5 === undefined || gameSettings.Setting5 === null ? null : gameSettings.Setting5])).insertId
 		const gameResultsID = (await conn.query('INSERT INTO GameResults SET Result1 = ?, Result2 = ?, Result3 = ?, Result4 = ?, Result5 = ?',
 			[gameResults.Result1 === undefined || gameResults.Result1 === null ? null : gameResults.Result1, gameResults.Result2 === undefined || gameResults.Result2 === null ? null : gameResults.Result2, gameResults.Result3 === undefined || gameResults.Result3 === null ? null : gameResults.Result3, gameResults.Result4 === undefined || gameResults.Result4 === null ? null : gameResults.Result4, gameResults.Result5 === undefined || gameResults.Result5 === null ? null : gameResults.Result5])).insertId
-		await conn.query('INSERT INTO GameRounds SET PlayerID = (SELECT ID FROM Players WHERE EMail = ?), GameID = ?, GameSettingsID = ?, GameResultsID = ?, Date = ?',
-			[eMail, gameID, gameSettingsID, gameResultsID, new Date().toISOString().slice(0, 19).replace('T', ' ')])
+		await conn.query('INSERT INTO GameRounds SET PlayerID = (SELECT ID FROM Players WHERE EMail = ?), GameID = ?, GameSettingsID = ?, GameResultsID = ?, DeviceInfo = ?, Date = ?',
+			[eMail, gameID, gameSettingsID, gameResultsID, deviceInfo, new Date().toISOString().slice(0, 19).replace('T', ' ')])
 	} catch (error) {
 		console.log(error)
 		res.status(500)
@@ -73,7 +74,7 @@ api.get('/results/', async (req, res) => {
 	try {
 		conn = await db.getConnection()
 		conn.query(`USE ${process.env.DB_NAME}`)
-		let baseQuery = 'SELECT GameRounds.ID, GameID, PlayerID, UserName, EMail, Setting1, Setting2, Setting3, Setting4, Setting5, Result1, Result2, Result3, Result4, Result5, Date FROM `GameRounds` INNER JOIN Players ON PlayerID = Players.ID INNER JOIN GameSettings ON GameSettingsID = GameSettings.ID INNER JOIN GameResults ON GameResultsID = GameResults.ID'
+		let baseQuery = 'SELECT GameRounds.ID, GameID, PlayerID, UserName, EMail, Setting1, Setting2, Setting3, Setting4, Setting5, Result1, Result2, Result3, Result4, Result5, DeviceInfo, Date FROM `GameRounds` INNER JOIN Players ON PlayerID = Players.ID INNER JOIN GameSettings ON GameSettingsID = GameSettings.ID INNER JOIN GameResults ON GameResultsID = GameResults.ID'
 		if (eMail && gameID) {
 			r = await conn.query(baseQuery + ' WHERE EMail = ? AND GameID = ?', [eMail, gameID])
 		} else if (eMail) {
@@ -82,6 +83,9 @@ api.get('/results/', async (req, res) => {
 			r = await conn.query(baseQuery + ' WHERE GameID = ?', gameID)
 		} else {
 			r = await conn.query(baseQuery)
+		}
+		for (let a of r) {
+			a.DeviceInfo = JSON.parse(a.DeviceInfo)
 		}
 	} catch (error) {
 		console.log(error)

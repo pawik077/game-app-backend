@@ -2,7 +2,7 @@ const express = require('express')
 const mariadb = require('mariadb')
 const bp = require('body-parser')
 const cors = require('cors')
-const axios = require('axios')
+const {OAuth2Client} = require('google-auth-library')
 require('dotenv').config()
 const api = express()
 const port = 4000
@@ -19,19 +19,24 @@ api.use(cors())
 
 api.post('/tokensignin/', async (req, res) => {
 	const id_token = req.body.id_token
+	const client = new OAuth2Client(process.env.CLIENT_ID)
 	try {
-		const verification = await axios.get('https://oauth2.googleapis.com/tokeninfo?id_token=' + id_token)
+		const ticket = await client.verifyIdToken({
+			idToken: id_token,
+			audience: process.env.CLIENT_ID,
+		})
+		const payload = ticket.getPayload()
 		const response = {
 			client_correct: true,
-			domain_user:  false,
+			domain_user: false,
 			new_user: false
 		}
-		if (verification.data.aud !== process.env.CLIENT_ID) response.client_correct = false
-		if(verification.data.hd === process.env.DOMAIN) response.domain_user = true
-		if ((await getUserBySub(verification.data.sub)).length === 0) {
-			const userName = verification.data.name
-			const eMail = verification.data.email
-			const sub = verification.data.sub
+		if (payload.aud !== process.env.CLIENT_ID) response.client_correct = false
+		if (payload.hd === process.env.DOMAIN) response.domain_user = true
+		if ((await getUserBySub(payload.sub)).length === 0) {
+			const userName = payload.name
+			const eMail = payload.email
+			const sub = payload.sub
 			response.new_user = true
 			await addUser(userName, eMail, sub)
 		}
